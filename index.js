@@ -1,10 +1,16 @@
 const express = require("express");
-const app = express();
+const { WhopServerSdk } = require("@whop/sdk");
 
+const app = express();
 app.use(express.json());
 
 const WHOP_API_KEY = process.env.WHOP_API_KEY;
 const WHOP_COMPANY_ID = process.env.WHOP_COMPANY_ID;
+
+const whop = WhopServerSdk({
+  appApiKey: WHOP_API_KEY,
+  companyId: WHOP_COMPANY_ID
+});
 
 app.get("/", (req, res) => res.send("Running"));
 
@@ -14,33 +20,32 @@ app.post("/charge", async (req, res) => {
 
     const { member_id, payment_method_id, amount } = req.body;
 
-    const response = await fetch("https://api.whop.com/payments", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${WHOP_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        company_id: WHOP_COMPANY_ID,
-        member_id: member_id,
-        payment_method_id: payment_method_id,
-        plan: {
-          currency: "usd",
-          initial_price: Number(amount) || 1,
-          plan_type: "one_time"
-        }
-      })
+    if (!member_id || !payment_method_id || !amount) {
+      return res.status(400).json({
+        error: "Missing member_id, payment_method_id, or amount"
+      });
+    }
+
+    const payment = await whop.payments.create({
+      company_id: WHOP_COMPANY_ID,
+      member_id: member_id,
+      payment_method_id: payment_method_id,
+      plan: {
+        currency: "usd",
+        initial_price: Number(amount),
+        plan_type: "one_time"
+      }
     });
 
-    const text = await response.text();
+    console.log("Whop SDK payment response:", JSON.stringify(payment));
 
-console.log("Whop status:", response.status);
-console.log("Whop raw response:", text);
-    
-res.status(response.status).send(text);
+    res.status(200).json(payment);
   } catch (err) {
-    console.error("Error:", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("Whop SDK error:", err);
+    res.status(500).json({
+      error: err.message,
+      details: err
+    });
   }
 });
 
