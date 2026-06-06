@@ -33,9 +33,11 @@ app.post("/charge", async (req, res) => {
     });
 
     const text = await response.text();
-    console.log("Whop raw response:", text);
 
-    res.status(200).send(text);
+console.log("Whop status:", response.status);
+console.log("Whop raw response:", text);
+    
+res.status(response.status).send(text);
   } catch (err) {
     console.error("Error:", err.message);
     res.status(500).json({ error: err.message });
