@@ -14,7 +14,7 @@ app.post("/charge", async (req, res) => {
 
     const { member_id, payment_method_id, amount } = req.body;
 
-    const response = await fetch("https://api.whop.com/api/v5/payments", {
+    const response = await fetch("https://api.whop.com/payments", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${WHOP_API_KEY}`,
