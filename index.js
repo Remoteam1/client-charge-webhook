@@ -1,5 +1,5 @@
 import express from "express";
-import Whop from "@whop";
+import Whop from "@whop/sdk";
 
 const app = express();
 app.use(express.json());
@@ -41,9 +41,11 @@ app.post("/charge", async (req, res) => {
 
     const payment = await whop.payments.create({
       company_id: WHOP_COMPANY_ID,
+      member_id: member_id,
+      payment_method_id: payment_method_id,
       plan: {
         currency: "usd",
-        initial_price: Number,
+        initial_price: Number(amount),
         plan_type: "one_time"
       }
     });
